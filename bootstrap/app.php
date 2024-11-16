@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Middleware\CookieTokenMiddleware;
+use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 use Illuminate\Http\Middleware\HandleCors;
+use Illuminate\Session\Middleware\StartSession;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -14,8 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
         apiPrefix: '/api'
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->append(CookieTokenMiddleware::class);
         $middleware->use([
-            // HandleCors::class,
+            HandleCors::class,
+            EncryptCookies::class,
+            StartSession::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

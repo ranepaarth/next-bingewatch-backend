@@ -19,11 +19,11 @@ return [
 
     'allowed_methods' => ['GET', 'PUT', 'POST', 'PATCH', 'DELETE'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => ['https://next-bingewatch.vercel.app', 'http://localhost:3000,https://next-bingewatch-git-refactor-feat-authdev-ranepaarths-projects.vercel.app'],
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['*'],
+    'allowed_headers' => ['https://next-bingewatch.vercel.app,https://next-bingewatch-git-refactor-feat-authdev-ranepaarths-projects.vercel.app'],
 
     'exposed_headers' => [],
 

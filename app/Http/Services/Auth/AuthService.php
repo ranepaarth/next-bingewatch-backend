@@ -3,6 +3,7 @@
 namespace App\Http\Services\Auth;
 
 use App\Http\Repositories\Auth\AuthRepository;
+use Illuminate\Support\Facades\Hash;
 
 class AuthService
 {
@@ -12,19 +13,34 @@ class AuthService
         $this->repository = new AuthRepository();
     }
 
-    public function register($request)
-    {
-        $where = ['id' => $request['id']];
-        return $this->repository->register($where, $request);
-    }
-
     public function getStarted($request)
     {
         // create a user entry into the user database when user enters the email on landing page
         return $this->repository->getStarted($request);
     }
 
-    public function login() {}
+    public function register($request)
+    {
+        $user = $this->repository->register($request);
+
+        return $user;
+    }
+
+    public function checkIfUserExist($request)
+    {
+        $where = [
+            'email' => $request['email']
+        ];
+        $user = $this->repository->checkIfUserExist($where);
+        return $user;
+    }
+
+    public function login($request)
+    {
+        $where = ['email' => $request['email']];
+        $user = $this->repository->login($where, $request);
+        return $user;
+    }
 
     public function logout() {}
 }

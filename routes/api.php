@@ -8,9 +8,10 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:api');
 
-Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/get-started', [AuthController::class, 'getStarted']);
+Route::post('/check-user-exist', [AuthController::class, 'checkIfUserExist']);  
+Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:api')->group(function () {
     Route::get('/get-user', [AuthController::class, 'getUser']);

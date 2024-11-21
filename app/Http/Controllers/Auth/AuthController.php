@@ -7,6 +7,7 @@ use App\Http\Helpers\ApiResponse;
 use App\Http\Services\Auth\AuthService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
@@ -81,18 +82,7 @@ class AuthController extends Controller
             'token' => $token
         ];
         Log::info("AuthController | getStarted", $data);
-        $response = new Response($data);
-        $response->withCookie(cookie(
-            'bingewatchToken', // Cookie name
-            $token, // Cookie value
-            1440, // Minutes until expiration
-            '/', // Path (root of the application)
-            null, // Domain (null should work for localhost)
-            false, // Secure (set to false for HTTP)
-            false, // HttpOnly
-            'Lax' // SameSite policy (you can also try 'Strict')
-        ));
-        return $response;
+        return ApiResponse::successResponse(['token' => $token, 'user' => $user], 'Registered in successfully');
     }
 
     public function checkIfUserExist(Request $request)
@@ -105,32 +95,46 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         Log::info('On-board User', $request->all());
-        $user = $this->service->login($request->all());
 
-        if (empty($user)) {
-            return ApiResponse::errorResponse($user, 'User does not exist',401);
+        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+            $user = Auth::user();
+            $token = $user->createToken('bingewatchSecureId')->accessToken;
+            return ApiResponse::successResponse(['token' => $token, 'user' => $user], 'Logged in successfully');
+        } else {
+            return ApiResponse::errorResponse(null, 'User does not exist', 404);
         }
-        Log::info('User',['user'=>$user]);
-        $token = $user->createToken('bingewatchSecureId')->accessToken;
-        $data = [
-            'user' => $user,
-            'token' => $token,
-            'message' => 'User logged in successfully'
-        ];
-        Log::info("AuthController | getStarted", $data);
-        $response = new Response($data);
-        $response->withCookie(cookie(
-            'bingewatchSecureId', // Cookie name
-            $token, // Cookie value
-            1440, // Minutes until expiration
-            '/', // Path (root of the application)
-            null, // Domain (null should work for localhost)
-            false, // Secure (set to false for HTTP)
-            false, // HttpOnly
-            'Lax' // SameSite policy (you can also try 'Strict')
-        ));
-        return $response;
     }
 
-    public function logout() {}
+    public function getUser(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return ApiResponse::errorResponse(null, 'Unauthorized access blocked', 401);
+        }
+
+        return ApiResponse::successResponse($user, 'User retrieved successfully');
+    }
+
+
+    public function logout(Request $request)
+    {
+        try {
+            // Retrieve the currently authenticated user's token
+            $token = $request->user()->token();
+
+            // Revoke the token to make it invalid
+            $token->revoke();
+
+            // Clear the cookie
+            $response = ApiResponse::successResponse(null, 'User logged out successfully');
+            $response->withCookie(cookie()->forget('bingewatchSecureId'));
+
+            Log::info('User logged out successfully', ['user_id' => $request->user()->id]);
+            return $response;
+        } catch (\Exception $e) {
+            Log::error('Error during logout', ['error' => $e->getMessage()]);
+            return ApiResponse::errorResponse(null, 'An error occurred while logging out', 500);
+        }
+    }
 }

@@ -16,11 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
         apiPrefix: '/api'
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->append(CookieTokenMiddleware::class);
         $middleware->use([
             HandleCors::class,
-            EncryptCookies::class,
-            StartSession::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

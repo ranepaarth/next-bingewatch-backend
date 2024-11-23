@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\ApiResponse;
 use App\Http\Services\Auth\AuthService;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
@@ -60,7 +61,7 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        Log::info("AuthController | getStarted", $request->all());
+        Log::info("AuthController | register", $request->all());
 
         $validator = Validator::make($request->all(), [
             'email' => 'required|string|email|max:255|unique:users',
@@ -81,7 +82,9 @@ class AuthController extends Controller
             'user' => $user,
             'token' => $token
         ];
-        Log::info("AuthController | getStarted", $data);
+        event(new Registered($user));
+        $user->sendEmailVerificationNotification();
+        Log::info("AuthController | register", $data);
         return ApiResponse::successResponse(['token' => $token, 'user' => $user], 'Registered in successfully');
     }
 
@@ -94,7 +97,7 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        Log::info('On-board User', $request->all());
+        Log::info('Login User', $request->all());
 
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
             $user = Auth::user();

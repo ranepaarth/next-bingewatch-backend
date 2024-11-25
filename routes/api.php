@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\PlansController;
+use App\Http\Controllers\Users\UserController;
 use App\Http\Controllers\VerifyEmailController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -24,4 +25,5 @@ Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, '__invoke
 Route::middleware('auth:api')->group(function () {
     Route::get('/get-user', [AuthController::class, 'getUser']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::patch('/subscribe-to-plan',[UserController::class,'subscribeToPlan']);
 });

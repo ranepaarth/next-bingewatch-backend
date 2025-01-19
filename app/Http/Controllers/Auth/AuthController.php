@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\ApiResponse;
+use App\Http\Resources\User\UserResource;
 use App\Http\Services\Auth\AuthService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
@@ -41,7 +42,7 @@ class AuthController extends Controller
         }
         $token = $user->createToken('bingewatch_get_started')->accessToken;
         $data = [
-            'user' => $user,
+            'user' => new UserResource($user),
             'token' => $token
         ];
         Log::info("AuthController | getStarted", $data);
@@ -85,14 +86,18 @@ class AuthController extends Controller
         event(new Registered($user));
         $user->sendEmailVerificationNotification();
         Log::info("AuthController | register", $data);
-        return ApiResponse::successResponse(['token' => $token, 'user' => $user], 'Registered in successfully');
+        return ApiResponse::successResponse(['token' => $token, 'user' => new UserResource($user)], 'Registered in successfully');
     }
 
     public function checkIfUserExist(Request $request)
     {
         $user = $this->service->checkIfUserExist($request->all());
 
-        return ApiResponse::successResponse($user, 'User details fetched successfully');
+        if (!empty($user)) {
+            return ApiResponse::successResponse(new UserResource($user), 'User details fetched successfully');
+        }
+
+        return ApiResponse::successResponse($user, 'User Does not exists');
     }
 
     public function login(Request $request)
@@ -102,7 +107,7 @@ class AuthController extends Controller
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
             $user = Auth::user();
             $token = $user->createToken('bingewatchSecureId')->accessToken;
-            return ApiResponse::successResponse(['token' => $token, 'user' => $user], 'Logged in successfully');
+            return ApiResponse::successResponse(['token' => $token, 'user' => new UserResource($user)], 'Logged in successfully');
         } else {
             return ApiResponse::errorResponse(null, 'User does not exist', 404);
         }

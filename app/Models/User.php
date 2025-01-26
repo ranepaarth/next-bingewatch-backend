@@ -42,4 +42,14 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
         ];
     }
+
+    public function userProfiles()
+    {
+        return $this->hasMany(UserProfile::class, 'user_id', 'id');
+    }
+
+    public function userProfilesCount()
+    {
+        return $this->withCount('userProfiles');
+    }
 }
